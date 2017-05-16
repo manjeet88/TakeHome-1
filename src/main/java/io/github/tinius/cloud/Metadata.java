@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017. Paul E. Tinius
+ */
+
 package io.github.tinius.cloud;
 
 import oracle.cloud.storage.model.Key;
@@ -5,6 +9,7 @@ import oracle.cloud.storage.model.Key;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 /*
@@ -15,7 +20,7 @@ public class Metadata
     private final String bin;
     private final File file;
     private final UUID uuid;
-    private final Map<Integer, Segment> segments;
+    private final Map<Integer,Part> segments;
 
     /**
      * @param bin the bin where file segments are placed.
@@ -49,9 +54,11 @@ public class Metadata
     /**
      * @param segment the segment
      */
-    public void put( final Segment segment ) { segments.put( segment.seqNo( ), segment ); }
+    public void put( final Part segment ) { segments.put( segment.seqNo( ), segment ); }
 
-    public static final class Segment
+    public Map<Integer,Part> get( ) { return segments; };
+
+    public static final class Part
     {
         private final Key key;
         private final String checksum;
@@ -59,7 +66,7 @@ public class Metadata
         private final long start;
         private final long end;
 
-        public Segment( final Key key, final int seqNo, final long start, final long end, final String checksum )
+        public Part( final Key key, final int seqNo, final long start, final long end, final String checksum )
         {
             this.key = key;
             this.seqNo = seqNo;
@@ -73,5 +80,18 @@ public class Metadata
         public int seqNo( ) { return seqNo; }
         public long start( ) { return start; }
         private long end( ) { return end; }
+
+
+        @Override
+        public String toString( )
+        {
+            return new StringJoiner( ", ", this.getClass( ).getSimpleName( ) + "[", "]" )
+                                    .add( "checksum = " + checksum )
+                                    .add( "end = " + end )
+                                    .add( "key = " + key )
+                                    .add( "seqNo = " + seqNo )
+                                    .add( "start = " + start )
+                                    .toString( );
+        }
     }
 }

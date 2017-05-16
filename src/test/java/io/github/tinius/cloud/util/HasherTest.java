@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017. Paul E. Tinius
+ */
+
 package io.github.tinius.cloud.util;
 
 import org.junit.After;

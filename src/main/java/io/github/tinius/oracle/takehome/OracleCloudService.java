@@ -1,14 +1,22 @@
+/*
+ * Copyright (c) 2017. Paul E. Tinius
+ */
+
 package io.github.tinius.oracle.takehome;
 
 import com.google.common.base.Preconditions;
 import io.dropwizard.util.Size;
 import io.github.tinius.cloud.CloudService;
+import io.github.tinius.cloud.Metadata;
+import io.github.tinius.cloud.Metadata.Part;
 import io.github.tinius.cloud.io.Chunker;
 import oracle.cloud.storage.CloudStorage;
 import oracle.cloud.storage.model.Container;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /*
@@ -20,6 +28,7 @@ public class OracleCloudService
     private final CloudStorage backend;
 
     private Container container;
+    private Metadata metadata;
 
     /**
      * @param backend the backend cloud storage engine
@@ -37,7 +46,7 @@ public class OracleCloudService
     public void createBin( )
     {
         container = backend.createContainer( getBin( ) );
-        logger.trace( "Container::{}", container );
+        logger.trace( "Container::{}", container.getName( ) );
     }
 
     /**
@@ -53,7 +62,13 @@ public class OracleCloudService
         try
         {
             final Chunker chunker = new Chunker( getBin( ), file, backend );
-            chunker.processAll( getParallelism( ), getChunk( ) );
+            chunker.chunk( getParallelism( ), getChunk( ) );
+            metadata = chunker.metadata( );
+
+            logger.trace( "CONTAINER::{}:{}:{}",
+                          container.getName( ),
+                          Size.megabytes( container.getSize( ) ),
+                          container.getCount( ) );
         }
         // TODO create a well-known exception
         catch ( Exception e )
@@ -64,13 +79,54 @@ public class OracleCloudService
     }
 
     /**
+     * @return Returns the metadata
+     */
+    public Metadata metadata( ) { return metadata; }
+
+    /**
      * @param uuid the unique identifier for the stream being retrieved
      *
      * @return Returns the {@link FileInputStream}
      */
     @Override
-    public FileInputStream getObject( final UUID uuid )
+    public File getObject( final UUID uuid )
     {
+        if( metadata != null && !metadata.get( ).isEmpty( ) )
+        {
+            final Map<Integer,Part > segment = metadata.get( );
+            for( final Map.Entry<Integer,Part > entry :  segment.entrySet( ) )
+            {
+                System.out.println( backend.retrieveObject( metadata().bin( ), entry.getValue( ).key( ).getKey( ) ) );
+            }
+        }
+
         return null;
+    }
+
+    @Override
+    public void deleteBin( final boolean recursive )
+    {
+        if( recursive )
+        {
+            if( container == null )
+            {
+                final Optional<Container> optional = backend.listContainers( )
+                                                            .stream( )
+                                                            .filter( c -> c.getName( ).equals( getBin( ) ) )
+                                                            .findFirst( );
+                optional.ifPresent( c -> container = c );
+            }
+
+            if( container != null )
+            {
+                backend.listObjects( container.getName( ), null )
+                       .forEach( o -> backend.deleteObject( container.getName( ), o.getKey( ) ) );
+            }
+        }
+
+        if( container != null )
+        {
+            backend.deleteContainer( container.getName( ) );
+        }
     }
 }
