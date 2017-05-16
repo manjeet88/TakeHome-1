@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017. Paul E. Tinius
+ */
+
 package io.github.tinius;
 
 import io.dropwizard.util.Size;
@@ -22,16 +26,13 @@ public class Main
     private final static String CONTAINER_NAME = "OracleTakeHomeExercise";
 
     private final static int DEF_PARALLELISM = 5;
-    private final static Size DEF_CHUNK_SIZE = Size.kilobytes( 1 );
+    private final static Size DEF_CHUNK_SIZE = Size.megabytes( 1 );
 
-    // https://a478936.storage.oraclecloud.com/v1/Storage-a478936 ( REST endpoint )
-    // https://a478936.storage.oraclecloud.com/auth/v1.0 ( Auth V1 Endpoint )
-
-    //                                     https://<Identity Domain Name>.storage.oraclecloud.com
     private final static String DEF_URL = "https://%s.storage.oraclecloud.com";
     private static final String DEF_SERVICE_NAME = "Storage-%s";
 
-    private final static File file = Paths.get( "/Users/ptinius/Pictures/f01fc8ca9ffa0c9efd764ed3406d77f8.jpg" )
+    // /Users/ptinius/workspace/TakeHome/src/test/resources/test-data/6mb-ascii-text-file.txt
+    private final static File file = Paths.get( "src/test/resources/test-data/6mb-ascii-text-file.txt" )
                                           .toFile( );
 
     public static void main( String[] args )
@@ -46,6 +47,11 @@ public class Main
         final String domain = Objects.requireNonNull( System.getenv( "CLOUD_DOMAIN" ),
                                                        "Missing cloud identity domain id." );
 
+        if( !file.exists( ) )
+        {
+            throw new Exception( "The specified file '" + file.toString( ) + "' wasn't found." );
+        }
+
         config.setUsername( username );
         config.setPassword( passwd.toCharArray( ) );
         config.setServiceName( String.format( DEF_SERVICE_NAME, domain ) );
@@ -56,8 +62,12 @@ public class Main
                                                                     DEF_PARALLELISM,
                                                                     DEF_CHUNK_SIZE );
         logger.trace( "chunk size {} bytes", DEF_CHUNK_SIZE );
-        final UUID uuid = UUID.randomUUID();
+        final UUID uuid = UUID.randomUUID( );
         service.createBin( );
         service.putObject( uuid, file );
+
+        // TODO do the reassemble
+
+        service.deleteBin( true );
     }
 }

@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2017. Paul E. Tinius
+ */
+
 package io.github.tinius.cloud.io;
 
 import io.dropwizard.util.Size;
 import io.github.tinius.cloud.Metadata;
+import io.github.tinius.cloud.Metadata.Part;
 import io.github.tinius.cloud.util.DiscreteTypeUtil;
 import io.github.tinius.cloud.util.Hasher;
 import oracle.cloud.storage.CloudStorage;
@@ -30,6 +35,7 @@ import java.util.concurrent.Future;
  * @author ptinius.
  */
 public class Chunker
+    extends IoBase
 {
     private static final Logger logger = LoggerFactory.getLogger( Chunker.class );
 
@@ -42,7 +48,7 @@ public class Chunker
 
     /**
      * @param bin the bin where file segments are placed.
-     * @param file the {@link File} representing the segments ( chunks )
+     * @param file the {@link File} representing the part ( chunks )
      * @param storage the cloud backend storage api
      */
     public Chunker( final String bin, final File file, final CloudStorage storage )
@@ -57,37 +63,42 @@ public class Chunker
     }
 
     /**
+     * @return Returns the metadata about uploaded file.
+     */
+    public Metadata metadata( ) { return metadata; }
+
+    /**
      * @param noOfThreads the number of threads
      * @param chunkSize the chunk size
      *
      * @throws Exception if interrupted or if executor errors occurs
      */
-    public void processAll( final int noOfThreads, final Size chunkSize )
+    public void chunk( final int noOfThreads, final Size chunkSize )
         throws Exception
     {
         logger.trace( "# threads {} chunk size {} bytes", noOfThreads, chunkSize );
 
         int count = ( int ) ( ( file.length( ) + chunkSize.toBytes( ) - 1 ) / chunkSize.toBytes( ) );
 
-        List<Callable<Metadata.Segment>> tasks = new ArrayList<>( count );
+        List<Callable<Part >> tasks = new ArrayList<>( count );
         for ( int i = 0; i < count; i++ )
         {
-            tasks.add( processPartTask( i, i * chunkSize.toBytes( ),
-                                        Math.min( file.length( ), ( i + 1 ) * chunkSize.toBytes( ) ) ) );
+            tasks.add( task( i, i * chunkSize.toBytes( ),
+                             Math.min( file.length( ), ( i + 1 ) * chunkSize.toBytes( ) ) ) );
         }
 
         ExecutorService es = Executors.newFixedThreadPool( noOfThreads );
 
-        List<Future<Metadata.Segment>> results = es.invokeAll( tasks );
+        List<Future<Part >> results = es.invokeAll( tasks );
 
         es.shutdown( );
 
         // use the results for something
-        for ( Future<Metadata.Segment> result : results )
+        for ( Future<Part > result : results )
         {
             if( result != null && result.get( ) != null )
             {
-                final Metadata.Segment segment = result.get( );
+                final Part segment = result.get( );
                 if ( segment != null )
                 {
                     metadata.put( segment );
@@ -96,14 +107,13 @@ public class Chunker
         }
     }
 
-    private Metadata.Segment processPart( final int sequence, final long start, final long end )
+    private Part doChunk( final int sequence, final long start, final long end )
     {
         Key key = null;
         try( final SeekableByteChannel sbc = Files.newByteChannel( Paths.get( file.toURI( ) ),
                                                                    EnumSet.of( StandardOpenOption.READ ) ) )
         {
-            final UUID uuid = UUID.randomUUID( );
-
+            final String k = String.format( KEY_FMT, UUID.randomUUID( ).toString( ), sequence );
 
             final int newStart = ( int ) ( start == 0L ? start : start + 1L );
             final ByteBuffer buffer = ByteBuffer.allocate( ( int ) ( end - newStart ) );
@@ -111,21 +121,22 @@ public class Chunker
             logger.trace( "Computing sequence# {} from {} to {}", sequence, newStart, end );
 
             buffer.clear( );
-            sbc.position( newStart );
-
-            if( sbc.read( buffer ) > 0 )
+            try ( SeekableByteChannel position = sbc.position( newStart ) )
             {
-                buffer.flip( );
+                if( position.read( buffer ) > 0 )
+                {
+                    buffer.flip( );
 
-                key = storage.storeObject( bin,
-                                           uuid.toString( ),
-                                           contentType,
-                                           new ByteArrayInputStream( buffer.array( ) ) );
+                    key = storage.storeObject( bin,
+                                               k,
+                                               contentType,
+                                               new ByteArrayInputStream( buffer.array( ) ) );
+                }
             }
 
             logger.trace( "Finished sequence# {} from {} to {}", sequence, newStart, end );
 
-            return new Metadata.Segment( key, sequence, start, end, Hasher.MD5.checksum( buffer.array( ) ) );
+            return new Part( key, sequence, start, end, Hasher.MD5.checksum( buffer.array( ) ) );
         }
         catch ( IOException e )
         {
@@ -137,8 +148,8 @@ public class Chunker
         return null;
     }
 
-    private Callable<Metadata.Segment> processPartTask( final int sequence, final long start, final long end )
+    private Callable<Part > task( final int sequence, final long start, final long end )
     {
-        return ( ) -> processPart( sequence, start, end );
+        return ( ) -> doChunk( sequence, start, end );
     }
 }

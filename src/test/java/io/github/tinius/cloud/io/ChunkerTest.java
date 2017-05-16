@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017. Paul E. Tinius
+ */
+
 package io.github.tinius.cloud.io;
 
 import io.dropwizard.util.Size;
@@ -66,6 +70,6 @@ public class ChunkerTest
     public void processAll( )
         throws Exception
     {
-        chunker.processAll( 5, Size.kilobytes( 1 ) );
+        chunker.chunk( 5, Size.kilobytes( 1 ) );
     }
 }
