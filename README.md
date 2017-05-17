@@ -6,7 +6,7 @@ This is a exercise where a supplied file, based on the chuck size, is broken int
 in parallel, allowing for faster transfer rates.
 
 This exercise has a default chunk size of 1M, but can easily be any size ( smaller or larger ). When transferring large
-files it better to transfer the in large chunks and in parallel.
+files it better to transfer them in large chunks and in parallel.
 
 ### Clone
 
