@@ -21,13 +21,11 @@ Specifically,
 ## Implementation
 So what this program does do is very simple, it chunks a provided file using a caller specified concurrence and chunk size.
 
-This program create separate objects stored ( object size is based on the file size divided by the chunk size ) in the 
-Oracle Cloud and will re-assembly ( TODO ) them in to the resulting file. Which isn't what the non-functional requirement:
+This program creates separate objects stored (object size is based on the file size divided by the chunk size) in the Oracle Cloud and will re-assembly (TODO) them into the resulting file. Which isn't what the non-functional requirement:
 
-* Concurrency – There could be multiple writers trying to write/read the same object. Your design needs to handle that. Last write wins semantics is acceptable for this exercise.
+    * Concurrency – There could be multiple writers trying to write/read the same object. Your design needs to handle that. Last write wins semantics is acceptable for this exercise.
 
-But it would be easily adapted to meet this requirement. The design choose to break the file into chunks, so that the data integrity will be consistent.
-The last write wins suggestion seems short sided.
+But it would be easily adapted to meet this requirement. The design chooses to break the file into chunks, so that the data integrity will be consistent. The last write wins suggestion seems short sided.
 
 ### Clone
 
