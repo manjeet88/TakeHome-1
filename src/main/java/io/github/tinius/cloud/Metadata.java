@@ -56,7 +56,7 @@ public class Metadata
      */
     public void put( final Part segment ) { segments.put( segment.seqNo( ), segment ); }
 
-    public Map<Integer,Part> get( ) { return segments; };
+    public Map<Integer,Part> get( ) { return segments; }
 
     public static final class Part
     {
@@ -75,12 +75,11 @@ public class Metadata
             this.checksum = checksum;
         }
 
-        public String checksum( ) { return this.checksum; }
-        public Key key( ) { return key; }
-        public int seqNo( ) { return seqNo; }
-        public long start( ) { return start; }
-        private long end( ) { return end; }
-
+        String checksum( ) { return this.checksum; }
+        Key key( ) { return key; }
+        int seqNo( ) { return seqNo; }
+        long start( ) { return start; }
+        long end( ) { return end; }
 
         @Override
         public String toString( )

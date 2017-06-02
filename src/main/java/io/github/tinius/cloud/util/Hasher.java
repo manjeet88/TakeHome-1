@@ -28,15 +28,9 @@ public enum Hasher
 
     private static final Logger logger = LoggerFactory.getLogger( Hasher.class );
 
-    Hasher( String name )
-    {
-        this.name = name;
-    }
+    Hasher( String name ) { this.name = name; }
 
-    public String getName( )
-    {
-        return name;
-    }
+    public String getName( ) { return name; }
 
     /**
      * @param bytes the bytes to create checksum.
@@ -67,11 +61,9 @@ public enum Hasher
             }
         }
 
+        // TODO create a well-known exception, and throw it!
         return null;
     }
 
-    private static String toHex( final byte[] bytes )
-    {
-        return DatatypeConverter.printHexBinary( bytes );
-    }
+    private static String toHex( final byte[] bytes ) { return DatatypeConverter.printHexBinary( bytes ); }
 }

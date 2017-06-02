@@ -67,7 +67,7 @@ public class ChunkerTest
     }
 
     @Test
-    public void processAll( )
+    public void chunk( )
         throws Exception
     {
         chunker.chunk( 5, Size.kilobytes( 1 ) );

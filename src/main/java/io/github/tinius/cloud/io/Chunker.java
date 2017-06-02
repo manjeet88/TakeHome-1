@@ -52,7 +52,6 @@ public class Chunker
      * @param storage the cloud backend storage api
      */
     public Chunker( final String bin, final File file, final CloudStorage storage )
-        throws IOException
     {
         this.bin = bin;
         this.file = file;

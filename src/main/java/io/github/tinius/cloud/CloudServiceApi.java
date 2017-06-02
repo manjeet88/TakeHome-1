@@ -5,7 +5,6 @@
 package io.github.tinius.cloud;
 
 import java.io.File;
-import java.util.UUID;
 
 /*
  * @author ptinius.
@@ -18,17 +17,16 @@ public interface CloudServiceApi
     void createBin( );
 
     /**
-     * @param uuid the unique identifier for the stream being put
      * @param file the {@link File} to be put
      */
-    void putObject( final UUID uuid, final File file );
+    void putObject( final File file );
 
     /**
-     * @param uuid the unique identifier for the stream being retrieved
+     * @param file the {@link File} to be populated
      *
      * @return Returns the {@link File}
      */
-    File getObject( final UUID uuid );
+    File getObject( final File file );
 
     /**
      * delete bin

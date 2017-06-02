@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
  * @author ptinius
  */
 public class Assembler
+    extends IoBase
 {
     private static final Logger logger = LoggerFactory.getLogger( Chunker.class );
 
@@ -60,12 +61,13 @@ public class Assembler
     public void assemble( final int noOfThreads, final Metadata metadata )
             throws Exception
     {
-        logger.trace( "# threads {} metadata part # {}", noOfThreads, metadata.get( ).size( ) );
+        logger.trace( "# threads {} metadata part size# {}", noOfThreads, metadata.get( ).size( ) );
 
         List<Callable<Segment>> tasks = new ArrayList<>( metadata.get( ).size( ) );
         for ( final Map.Entry<Integer, Part > segments : metadata.get( ).entrySet( ) )
         {
-            tasks.add( task( segments.getKey( ), segments.getValue( ) ) );
+            final Part part = segments.getValue( );
+//            tasks.add( task( segments.getKey( ), part.start( ), ) ) );
         }
 
         ExecutorService es = Executors.newFixedThreadPool( noOfThreads );
@@ -84,13 +86,15 @@ public class Assembler
         }
     }
 
-    private Segment doAssemble( final Integer seqNo, final Part segment )
+    private Segment doAssemble( final int sequence, final long start, final long end )
     {
+        // TODO assemble the chunks.
+
         return null;
     }
 
-    private Callable<Segment> task( final Integer seqNo, final Part segment )
+    private Callable<Segment> task( final int sequence, final long start, final long end )
     {
-        return ( ) -> doAssemble( seqNo, segment );
+        return ( ) -> doAssemble( sequence, start, end );
     }
 }

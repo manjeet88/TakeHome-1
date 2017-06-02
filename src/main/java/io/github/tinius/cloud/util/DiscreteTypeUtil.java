@@ -16,18 +16,25 @@ import java.net.URLConnection;
  *
  * @author: Bill Branan
  * Date: May 7, 2010
+ *
+ * Modified by @author ptinius
  */
 public class DiscreteTypeUtil
 {
-    private static final String DEFAULT_MIMETYPE = "application/octet-stream";
+    private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
 
     private FileNameMap fileNameMap = URLConnection.getFileNameMap( );
 
+    /**
+     * @param file the file
+     *
+     * @return Returns the {@link String} representation of the MIME TYPE
+     */
     public String getMimeType( final File file )
     {
         if ( file == null )
         {
-            return DEFAULT_MIMETYPE;
+            return DEFAULT_MIME_TYPE;
         }
         else
         {
@@ -35,21 +42,26 @@ public class DiscreteTypeUtil
         }
     }
 
+    /**
+     * @param fileName the name of the file
+     *
+     * @return Returns the {@link String} representation of the MIME TYPE
+     */
     public String getMimeType( String fileName )
     {
         if ( fileName == null )
         {
-            return DEFAULT_MIMETYPE;
+            return DEFAULT_MIME_TYPE;
         }
 
-        String mimetype = fileNameMap.getContentTypeFor( fileName );
-        if ( mimetype == null )
+        final String mimeType = fileNameMap.getContentTypeFor( fileName );
+        if ( mimeType == null )
         {
-            return DEFAULT_MIMETYPE;
+            return DEFAULT_MIME_TYPE;
         }
         else
         {
-            return mimetype;
+            return mimeType;
         }
     }
 

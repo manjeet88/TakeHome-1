@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.UUID;
 
 /*
  * @author ptinius.
@@ -62,9 +61,8 @@ public class Main
                                                                     DEF_PARALLELISM,
                                                                     DEF_CHUNK_SIZE );
         logger.trace( "chunk size {} bytes", DEF_CHUNK_SIZE );
-        final UUID uuid = UUID.randomUUID( );
         service.createBin( );
-        service.putObject( uuid, file );
+        service.putObject( file );
 
         // TODO do the reassemble
 

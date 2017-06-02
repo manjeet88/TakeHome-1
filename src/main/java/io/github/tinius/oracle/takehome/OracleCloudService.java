@@ -8,16 +8,14 @@ import com.google.common.base.Preconditions;
 import io.dropwizard.util.Size;
 import io.github.tinius.cloud.CloudService;
 import io.github.tinius.cloud.Metadata;
-import io.github.tinius.cloud.Metadata.Part;
+import io.github.tinius.cloud.io.Assembler;
 import io.github.tinius.cloud.io.Chunker;
 import oracle.cloud.storage.CloudStorage;
 import oracle.cloud.storage.model.Container;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /*
  * @author ptinius.
@@ -28,6 +26,11 @@ public class OracleCloudService
     private final CloudStorage backend;
 
     private Container container;
+
+    /*
+     * For simplicity this is a in-memory structure, ideally this would be keeps in a database ( Sql or NoSql )
+     * and would be indexed by the bin and file names.
+     */
     private Metadata metadata;
 
     /**
@@ -50,13 +53,11 @@ public class OracleCloudService
     }
 
     /**
-     * @param uuid the unique identifier
      * @param file the {@link File} to be put
      */
     @Override
-    public void putObject( final UUID uuid, final File file )
+    public void putObject( final File file )
     {
-        Preconditions.checkNotNull( uuid, "Must supply valid 'uuid' argument." );
         Preconditions.checkNotNull( file, "Must supply valid 'file' argument." );
 
         try
@@ -84,19 +85,30 @@ public class OracleCloudService
     public Metadata metadata( ) { return metadata; }
 
     /**
-     * @param uuid the unique identifier for the stream being retrieved
+     * @param file the {@link File} to be populated
      *
      * @return Returns the {@link FileInputStream}
      */
     @Override
-    public File getObject( final UUID uuid )
+    public File getObject( final File file )
     {
         if( metadata != null && !metadata.get( ).isEmpty( ) )
         {
-            final Map<Integer,Part > segment = metadata.get( );
-            for( final Map.Entry<Integer,Part > entry :  segment.entrySet( ) )
+            try
             {
-                System.out.println( backend.retrieveObject( metadata().bin( ), entry.getValue( ).key( ).getKey( ) ) );
+                final Assembler assembler = new Assembler( getBin( ), file, backend );
+                assembler.assemble( getParallelism( ), metadata( ) );
+                logger.trace( "CONTAINER::{}:{}:{}",
+                              container.getName( ),
+                              Size.megabytes( container.getSize( ) ),
+                              container.getCount( ) );
+                return file;
+            }
+            // TODO create a well-known exception
+            catch ( Exception e )
+            {
+                logger.error( "Put failed for {}:{}", getBin( ), file.getName( ), e.getMessage( ) );
+                logger.trace( "Stack Trace::", e );
             }
         }
 
